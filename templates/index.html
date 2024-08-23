@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lecture Note Taker</title>
+
+    <link rel="icon"
+        href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect x='10' y='10' width='80' height='80' fill='%234CAF50' rx='15' ry='15' /><path d='M30 30 L70 30 M30 50 L70 50 M30 70 L50 70' stroke='white' stroke-width='8' stroke-linecap='round' /><circle cx='75' cy='75' r='20' fill='%23FFA500' /><path d='M75 65 L75 85 M65 75 L85 75' stroke='white' stroke-width='4' stroke-linecap='round' /></svg>">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            background-color: #f0f0f0;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+
+        .container {
+            background-color: white;
+            padding: 1rem;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 400px;
+        }
+
+        .header {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 1rem;
+        }
+
+        .app-icon {
+            width: 50px;
+            height: 50px;
+            margin-right: 10px;
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 1rem;
+            font-size: 1.5rem;
+        }
+
+        .upload-area {
+            border: 2px dashed #ccc;
+            border-radius: 4px;
+            padding: 1rem;
+            text-align: center;
+            cursor: pointer;
+            margin-bottom: 1rem;
+            font-size: 0.9rem;
+        }
+
+        .upload-area.drag-over {
+            background-color: #f0f0f0;
+        }
+
+        #fileInfo {
+            margin-bottom: 1rem;
+            font-size: 0.8rem;
+            word-break: break-all;
+        }
+
+        button {
+            width: 100%;
+            padding: 0.7rem;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 1rem;
+            touch-action: manipulation;
+        }
+
+        button:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+
+        #status {
+            margin-top: 1rem;
+            text-align: center;
+            font-weight: bold;
+            font-size: 0.9rem;
+        }
+
+        #loginStatus {
+            margin-top: 1rem;
+            text-align: center;
+            font-weight: bold;
+            font-size: 0.9rem;
+        }
+
+        .error {
+            color: red;
+        }
+
+        .success {
+            color: green;
+        }
+
+        #loginForm {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        #loginForm input {
+            padding: 0.7rem;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 1rem;
+        }
+
+        .download-links {
+            margin-top: 1rem;
+            display: flex;
+            justify-content: space-around;
+        }
+
+        .download-link {
+            padding: 0.5rem 1rem;
+            background-color: #4CAF50;
+            color: white;
+            text-decoration: none;
+            border-radius: 4px;
+            font-size: 0.9rem;
+        }
+
+        @media (max-width: 480px) {
+            body {
+                padding: 10px;
+            }
+
+            .container {
+                padding: 0.8rem;
+            }
+
+            h1 {
+                font-size: 1.2rem;
+            }
+
+            .upload-area {
+                padding: 0.8rem;
+            }
+
+            button,
+            #loginForm input {
+                padding: 0.6rem;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="header">
+            <svg class="app-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+                <rect x="10" y="10" width="80" height="80" fill="#4CAF50" rx="15" ry="15" />
+                <path d="M30 30 L70 30 M30 50 L70 50 M30 70 L50 70" stroke="white" stroke-width="8"
+                    stroke-linecap="round" />
+                <circle cx="75" cy="75" r="20" fill="#FFA500" />
+                <path d="M75 65 L75 85 M65 75 L85 75" stroke="white" stroke-width="4" stroke-linecap="round" />
+            </svg>
+            <h1>Lecture Note Taker</h1>
+        </div>
+        <div id="loginSection">
+            <form id="loginForm">
+                <input type="text" id="username" placeholder="Username" required>
+                <input type="password" id="password" placeholder="Password" required>
+                <button type="submit">Login</button>
+                <div id="loginStatus"></div>
+            </form>
+        </div>
+        <div id="uploadSection" style="display: none;">
+            <div id="uploadArea" class="upload-area">
+                <p>Click here to select an audio file</p>
+                <p id="iosNote" style="display: none; font-size: 0.8em; color: #666;">
+                    On iOS, tap "Browse" in the file picker to access all your audio files.
+                </p>
+            </div>
+            <div id="fileInfo"></div>
+            <button id="uploadButton" disabled>Upload and Process</button>
+            <div id="status"></div>
+        </div>
+        <div id="downloadSection" style="display: none;">
+            <div class="download-links">
+                <a href="#" id="wordDownload" class="download-link" download>Download Word</a>
+                <a href="#" id="pdfDownload" class="download-link" download>Download PDF</a>
+            </div>
+        </div>
+        <input type="file" id="fileInput" accept="audio/*" style="display: none;">
+    </div>
+
+    <script>
+        const loginForm = document.getElementById('loginForm');
+        const loginSection = document.getElementById('loginSection');
+        const uploadSection = document.getElementById('uploadSection');
+        const uploadArea = document.getElementById('uploadArea');
+        const fileInfo = document.getElementById('fileInfo');
+        const uploadButton = document.getElementById('uploadButton');
+        const status = document.getElementById('status');
+        const loginStatus = document.getElementById('loginStatus');
+        const fileInput = document.getElementById('fileInput');
+        const downloadSection = document.getElementById('downloadSection');
+        let selectedFile = null;
+
+        // Show iOS note if on an iOS device
+        if (/iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream) {
+            document.getElementById('iosNote').style.display = 'block';
+        }
+
+        loginForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+
+            try {
+                const response = await fetch('/authenticate', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ username, password }),
+                });
+
+                if (response.ok) {
+                    loginSection.style.display = 'none';
+                    uploadSection.style.display = 'block';
+                } else {
+                    loginStatus.textContent = 'Authentication failed.';
+                    loginStatus.className = 'error';
+                }
+            } catch (error) {
+                loginStatus.textContent = 'An error occurred during authentication.';
+                loginStatus.className = 'error';
+            }
+        });
+
+        uploadArea.addEventListener('click', () => {
+            fileInput.click();
+        });
+
+        fileInput.addEventListener('change', (e) => handleFileSelect(e.target.files[0]));
+
+        function handleFileSelect(file) {
+            if (file && (file.type.startsWith('audio/') || file.type === 'audio/mpeg')) {
+                selectedFile = file;
+                fileInfo.textContent = `Selected file: ${file.name}`;
+                uploadButton.disabled = false;
+            } else {
+                status.textContent = 'Please select a valid audio file (including MP3).';
+                status.className = 'error';
+            }
+        }
+
+        uploadButton.addEventListener('click', async () => {
+            if (!selectedFile) {
+                status.textContent = 'Please select a file first.';
+                status.className = 'error';
+                return;
+            }
+
+            uploadButton.disabled = true;
+            status.textContent = 'Processing...';
+            status.className = '';
+            downloadSection.style.display = 'none';
+
+            const formData = new FormData();
+            formData.append('file', selectedFile);
+
+            try {
+                const response = await fetch('/upload', {
+                    method: 'POST',
+                    body: formData,
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    const wordDownloadLink = document.getElementById('wordDownload');
+                    const pdfDownloadLink = document.getElementById('pdfDownload');
+
+                    wordDownloadLink.href = data.word_doc;
+                    pdfDownloadLink.href = data.pdf;
+
+                    downloadSection.style.display = 'block';
+                    status.textContent = 'File processed successfully. Click the links to download.';
+                    status.className = 'success';
+                } else {
+                    throw new Error('Upload failed');
+                }
+            } catch (error) {
+                status.textContent = 'An error occurred during upload.';
+                status.className = 'error';
+            } finally {
+                uploadButton.disabled = false;
+            }
+        });
+
+        // Prevent default drag behaviors
+        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+            document.body.addEventListener(eventName, preventDefaults, false);
+            uploadArea.addEventListener(eventName, preventDefaults, false);
+        });
+
+        function preventDefaults(e) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+
+        // Handle drop
+        uploadArea.addEventListener('drop', (e) => {
+            const dt = e.dataTransfer;
+            const file = dt.files[0];
+            handleFileSelect(file);
+        });
+
+        // Visual feedback for drag events
+        ['dragenter', 'dragover'].forEach(eventName => {
+            uploadArea.addEventListener(eventName, highlight, false);
+        });
+
+        ['dragleave', 'drop'].forEach(eventName => {
+            uploadArea.addEventListener(eventName, unhighlight, false);
+        });
+
+        function highlight() {
+            uploadArea.classList.add('drag-over');
+        }
+
+        function unhighlight() {
+            uploadArea.classList.remove('drag-over');
+        }
+    </script>
+</body>
+
+</html>
