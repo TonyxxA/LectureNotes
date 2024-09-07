@@ -1,5 +1,6 @@
 from pydub import AudioSegment
 import whisper
+import torch
 
 
 class LocalAudioTranscriberService:
@@ -28,9 +29,11 @@ class LocalAudioTranscriberService:
             audio_file_path (str): The file path of the
             audio file to transcribe.
         """
+
         duration = self.get_audio_duration(audio_file_path)
 
-        model = whisper.load_model(self.model_name)
+        device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        model = whisper.load_model(self.model_name, device=device)
 
         audio = whisper.load_audio(audio_file_path)
         result = model.transcribe(audio)
